@@ -1,0 +1,20 @@
+{
+  "name": "misexnuk",
+  "version": "1.0.0",
+  "author": "Xnuk Shuman",
+  "license": "BSD-3-Clause",
+  "scripts": {
+    "run": "ts-node run.ts"
+  },
+  "dependencies": {
+    "axios": "^0.18.0",
+    "dotenv": "^6.2.0",
+    "twit": "^2.2.11"
+  },
+  "devDependencies": {
+    "@types/node": "^10.12.12",
+    "@types/twit": "^2.2.20",
+    "ts-node": "^7.0.1",
+    "typescript": "^3.2.2"
+  }
+}
