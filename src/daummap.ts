@@ -12,13 +12,14 @@ const mapSearch = Axios.create({
 	responseType: 'json'
 })
 
-// x = lng, y = lat
-const converter = ({data}: any): Promise<{x: string, y: string}> =>
+const xyToLatLng = ({x, y}: {x: string, y: string}) => ({lng: x, lat: y})
+
+const converter = ({data}: any): Promise<{lat: string, lng: string}> =>
 	(data && data.documents && data.documents[0])
-		? Promise.resolve(data.documents[0] as {x: string, y: string})
+		? Promise.resolve(xyToLatLng(data.documents[0]))
 		: Promise.reject()
 
-export const search = (query: string): Promise<{x: string, y: string}> => {
+export const search = (query: string): Promise<{lat: string, lng: string}> => {
 	const address = mapSearch.get('/address.json', {
 		params: {query, page: 1, size: 1}
 	}).then(converter)

@@ -1,9 +1,16 @@
 import { airkorea } from './airkorea';
 import { search } from './daummap';
 
-export const misexnuk = async (query: string) => {
-	const {x: lng, y: lat} = await search(query).catch(() => Promise.reject({type: 'search_error'}))
-	return await airkorea(lat, lng).catch(() => Promise.reject({type: 'parse_error'}))
+export const misexnuk = async (query: string | {lng: string, lat: string}) => {
+	const {lng, lat} = typeof query === 'string'
+		? await search(query).catch(() => Promise.reject({type: 'search_error'}))
+		: query
+
+	return await (
+		airkorea(lat, lng)
+			.then(airkorea => ({location: {lng, lat}, airkorea}))
+			.catch(() => Promise.reject({type: 'parse_error'}))
+	)
 }
 
 const pm10Level = (pm: number | null): string =>
@@ -34,8 +41,8 @@ const tweetLength = (str: string): number =>
 	}, 0)
 
 
-export const misexnuk_pretty = (query: string) => misexnuk(query).then(
-	({address, time, pm10, pm25}) => {
+export const misexnuk_pretty = (query: string | {lng: string, lat: string}): Promise<string | {location: {lat: string, lng: string}, text: string}> => misexnuk(query).then(
+	({airkorea: {address, time, pm10, pm25}, location}) => {
 		const timeAt = `${time}시 기준, `
 
 		const pm10Arrow =
@@ -66,16 +73,19 @@ export const misexnuk_pretty = (query: string) => misexnuk(query).then(
 
 		console.log(addressLength)
 
-		return [
-			timeAt + address.slice(0, addressLength),
-			pm10Arrow,
-			pm25Arrow,
-			footer
-		].join('\n')
+		return {
+			location,
+			text: [
+				timeAt + address.slice(0, addressLength),
+				pm10Arrow,
+				pm25Arrow,
+				footer
+			].join('\n')
+		}
 	}
 ).catch(err =>
 		!err ? '왜인진 모르겠습니다만 실패했습니다. ✨ 잠시 후 다시 시도해보세요.' :
 		err.type === 'search_error' ? '알 수 없는 위치입니다.' :
 		err.type === 'parse_error' ? '해당하는 위치의 미세먼지 정보를 가져오지 못했습니다. 잠시 후 다시 시도해보세요.' :
-		'왜인진 모르겠습니다만 실패했습니다. ✨ 잠시 후 다시 시도해보세요.' 
+		'왜인진 모르겠습니다만 실패했습니다. ✨ 잠시 후 다시 시도해보세요.'
 )

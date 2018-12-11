@@ -1,5 +1,9 @@
 import Twit = require('twit')
 import { misexnuk_pretty } from './misexnuk'
+import { Redis } from './redis';
+
+const tweetLocationPrefix = 'LOCATION:'
+const tweetDeletePrefix = 'DELETE:'
 
 const getEnv = (key: string): string => {
 	const res = process.env[key]
@@ -14,8 +18,53 @@ const T = new Twit({
 	access_token_secret: getEnv('TWITTER_ACCESS_TOKEN_SECRET')
 })
 
-export const run = () =>
-	T.stream('statuses/filter', {track: '미세즈눅', follow: '1247422820'})
+const replyTweet = (id_str: string, status: string) => new Promise<{id_str: string}>((res, rej) =>
+	T.post('statuses/update', {
+		status,
+		auto_populate_reply_metadata: true,
+		trim_user: true,
+		in_reply_to_status_id: id_str as string
+	} as any, (e, d) => e ? rej(e) : res(d as {id_str: string}))
+)
+
+const encodeLocation = ({lat, lng}: {lat: string, lng: string}) => lat + ',' + lng
+const decodeLocation = (hash: string): {lat: string, lng: string} | null => {
+	const [lat, lng] = hash.split(',')
+	if (lat !== '' && lat != null && lng !== '' && lng != null) return { lat, lng }
+	return null
+}
+
+const twitHandler = async (keyValue: ReturnType<typeof Redis>, id_str: string, query: string) => {
+	const reply = (status: string) => replyTweet(id_str, status)
+
+	let location: {lat: string, lng: string} | string = query
+	if (query === '') {
+		const cachedLocation = await keyValue.get(tweetLocationPrefix + id_str).catch(() => null)
+		if (cachedLocation) {
+			location = decodeLocation(cachedLocation) || ''
+		}
+	}
+
+	if (location === '') {
+		return reply('네?')
+	} else {
+		const result = await misexnuk_pretty(location)
+		if (typeof result === 'string') return reply(result)
+
+		const { location: newLocation, text } = result
+
+		if (
+			typeof location === 'string' ||
+			!(newLocation.lng === location.lng && newLocation.lat === location.lat)
+		) keyValue.set(tweetLocationPrefix + id_str, encodeLocation(newLocation))
+
+		return reply(text)
+	}
+}
+
+export const run = () => {
+	const keyValue = Redis()
+	return T.stream('statuses/filter', {track: '미세즈눅', follow: '1247422820'})
 
 	.on('tweet', tweet => {
 		if (tweet == null || tweet.text == null) return
@@ -29,16 +78,8 @@ export const run = () =>
 
 		const query = text.replace(/^미세즈눅\s*/, '').trim()
 
-		const reply = (status: string) => T.post('statuses/update', {
-			status,
-			auto_populate_reply_metadata: true,
-			trim_user: true,
-			in_reply_to_status_id: tweet.id_str as string
-		} as any)
-
-		if (query === '') {
-			reply('네?')
-		} else {
-			misexnuk_pretty(query).then(v => reply(v))
-		}
+		twitHandler(keyValue, tweet.id_str, query).then(({id_str}) =>
+			keyValue.hset(tweetDeletePrefix + tweet.user.id_str, tweet.id_str, id_str)
+		)
 	})
+}
