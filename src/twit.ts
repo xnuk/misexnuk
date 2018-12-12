@@ -1,5 +1,5 @@
 import Twit = require('twit')
-import { misexnuk_pretty } from './misexnuk'
+import { misexnukPretty } from './misexnuk'
 import { Redis } from './redis';
 
 const tweetLocationPrefix = 'LOCATION:'
@@ -48,7 +48,7 @@ const twitHandler = async (keyValue: ReturnType<typeof Redis>, id_str: {tweet: s
 	if (location === '') {
 		return reply('네?')
 	} else {
-		const result = await misexnuk_pretty(location)
+		const result = await misexnukPretty(location)
 		if (typeof result === 'string') return reply(result)
 
 		const { location: newLocation, text } = result

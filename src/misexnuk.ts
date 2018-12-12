@@ -41,7 +41,7 @@ const tweetLength = (str: string): number =>
 	}, 0)
 
 
-export const misexnuk_pretty = (query: string | {lng: string, lat: string}): Promise<string | {location: {lat: string, lng: string}, text: string}> => misexnuk(query).then(
+export const misexnukPretty = (query: string | {lng: string, lat: string}): Promise<string | {location: {lat: string, lng: string}, text: string}> => misexnuk(query).then(
 	({airkorea: {address, time, pm10, pm25}, location}) => {
 		const timeAt = `${time}시 기준, `
 
