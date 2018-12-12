@@ -10,7 +10,7 @@ export const Redis = () => {
 	const client = createClient({
 		host: getEnv('REDIS_HOST'),
 		port: +getEnv('REDIS_PORT'),
-		prefix: getEnv('REDIS_PREFIX'),
+		prefix: getEnv('REDIS_PREFIX') + ':',
 	})
 
 	return {

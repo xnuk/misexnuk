@@ -34,12 +34,12 @@ const decodeLocation = (hash: string): {lat: string, lng: string} | null => {
 	return null
 }
 
-const twitHandler = async (keyValue: ReturnType<typeof Redis>, id_str: string, query: string) => {
-	const reply = (status: string) => replyTweet(id_str, status)
+const twitHandler = async (keyValue: ReturnType<typeof Redis>, id_str: {tweet: string, user: string}, query: string) => {
+	const reply = (status: string) => replyTweet(id_str.tweet, status)
 
 	let location: {lat: string, lng: string} | string = query
 	if (query === '') {
-		const cachedLocation = await keyValue.get(tweetLocationPrefix + id_str).catch(() => null)
+		const cachedLocation = await keyValue.get(tweetLocationPrefix + id_str.user).catch(() => null)
 		if (cachedLocation) {
 			location = decodeLocation(cachedLocation) || ''
 		}
@@ -56,7 +56,7 @@ const twitHandler = async (keyValue: ReturnType<typeof Redis>, id_str: string, q
 		if (
 			typeof location === 'string' ||
 			!(newLocation.lng === location.lng && newLocation.lat === location.lat)
-		) keyValue.set(tweetLocationPrefix + id_str, encodeLocation(newLocation))
+		) keyValue.set(tweetLocationPrefix + id_str.user, encodeLocation(newLocation))
 
 		return reply(text)
 	}
@@ -78,7 +78,10 @@ export const run = () => {
 
 		const query = text.replace(/^미세즈눅\s*/, '').trim()
 
-		twitHandler(keyValue, tweet.id_str, query).then(({id_str}) =>
+		const userId = tweet.user.id_str
+		const tweetId = tweet.id_str
+
+		twitHandler(keyValue, {tweet: tweetId, user: userId}, query).then(({id_str}) =>
 			keyValue.hset(tweetDeletePrefix + tweet.user.id_str, tweet.id_str, id_str)
 		)
 	})
