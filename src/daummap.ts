@@ -1,4 +1,5 @@
 import Axios from 'axios'
+import { LatLng } from './common'
 
 const mapSearch = Axios.create({
 	method: 'GET',
@@ -14,12 +15,12 @@ const mapSearch = Axios.create({
 
 const xyToLatLng = ({x, y}: {x: string, y: string}) => ({lng: x, lat: y})
 
-const converter = ({data}: any): Promise<{lat: string, lng: string}> =>
+const converter = ({data}: any): Promise<LatLng> =>
 	(data && data.documents && data.documents[0])
 		? Promise.resolve(xyToLatLng(data.documents[0]))
 		: Promise.reject()
 
-export const search = (query: string): Promise<{lat: string, lng: string}> => {
+export const search = (query: string): Promise<LatLng> => {
 	const address = mapSearch.get('/address.json', {
 		params: {query, page: 1, size: 1}
 	}).then(converter)
