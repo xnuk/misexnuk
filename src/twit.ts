@@ -1,6 +1,6 @@
 import Twit = require('twit')
 import { misexnukPretty } from './misexnuk'
-import { Redis } from './redis';
+import { Redis } from './redis'
 
 const tweetLocationPrefix = 'LOCATION:'
 const tweetDeletePrefix = 'DELETE:'

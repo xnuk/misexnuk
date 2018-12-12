@@ -1,4 +1,4 @@
-import { createClient } from 'redis';
+import { createClient } from 'redis'
 
 const getEnv = (key: string): string => {
 	const res = process.env[key]

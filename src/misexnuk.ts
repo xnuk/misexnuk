@@ -1,6 +1,7 @@
-import { airkorea } from './airkorea';
-import { search } from './daummap';
+import { airkorea } from './airkorea'
+import { search } from './daummap'
 
+type LatLng = {lat: string, lng: string}
 export const misexnuk = async (query: string | {lng: string, lat: string}) => {
 	const {lng, lat} = typeof query === 'string'
 		? await search(query).catch(() => Promise.reject({type: 'search_error'}))
@@ -41,7 +42,7 @@ const tweetLength = (str: string): number =>
 	}, 0)
 
 
-export const misexnukPretty = (query: string | {lng: string, lat: string}): Promise<string | {location: {lat: string, lng: string}, text: string}> => misexnuk(query).then(
+export const misexnukPretty = (query: string | LatLng): Promise<string | {location: LatLng, text: string}> => misexnuk(query).then(
 	({airkorea: {address, time, pm10, pm25}, location}) => {
 		const timeAt = `${time}시 기준, `
 
