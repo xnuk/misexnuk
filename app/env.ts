@@ -16,10 +16,17 @@ const TWITTER_CREDENTIAL = {
 	access_token_secret: env('TWITTER_ACCESS_TOKEN_SECRET')
 }
 
+const REDIS_ENV = {
+	host: env('REDIS_HOST'),
+	port: +env('REDIS_PORT'),
+	prefix: env('REDIS_PREFIX')
+}
+
 export const getEnv = () => {
 	if (requiredEnvs.length === 0) return {
 		KAKAO_TOKEN,
 		TWITTER_CREDENTIAL,
+		REDIS_ENV,
 	}
 
 	throw `
