@@ -2,7 +2,9 @@ tsconfig.json:
   compilerOptions:
     baseUrl: '.'
     outDir: dist
-    rootDir: src
+    rootDirs:
+      - src
+      - app
 
     module: commonjs
     target: es6
