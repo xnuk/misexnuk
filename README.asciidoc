@@ -1,0 +1,1 @@
+image::https://circleci.com/gh/xnuk/misexnuk-supha-supha.svg?style=shield[Useless CircleCI build status badge, link="https://circleci.com/gh/xnuk/misexnuk-supha-supha"]
