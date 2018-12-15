@@ -1,9 +1,9 @@
 import { createClient } from 'redis'
 
-const getEnv = (key: string): string => {
-	const res = process.env[key]
-	if (res == null || res === '') throw "There's no " + key
-	return res
+export type RedisEnv = {
+	host: string,
+	port: number,
+	prefix: string
 }
 
 const callback = <T>(
@@ -14,11 +14,11 @@ const callback = <T>(
 	reply: T,
 ): void => err ? reject(err) : resolve(reply)
 
-export const Redis = () => {
+export const Redis = ({host, port, prefix}: RedisEnv) => {
 	const client = createClient({
-		host: getEnv('REDIS_HOST'),
-		port: +getEnv('REDIS_PORT'),
-		prefix: getEnv('REDIS_PREFIX') + ':',
+		host,
+		port,
+		prefix: prefix + ':',
 	})
 
 	return {
