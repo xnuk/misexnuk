@@ -6,6 +6,7 @@ jobs:
       - image: redis:latest
 
     steps:
+      - run: apt-get update && apt-get install -y ruby
       - checkout
 
       - restore_cache:
