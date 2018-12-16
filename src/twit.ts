@@ -1,14 +1,7 @@
-import Twit = require('twit')
+import { Twit, TwitterCredential } from '../modulize/twit'
 import { misexnukPretty } from './misexnuk'
 import { Redis, RedisEnv } from './redis'
 import { LatLng } from './common'
-
-type TwitterCredential = {
-	consumer_key: string,
-	consumer_secret: string,
-	access_token: string,
-	access_token_secret: string
-}
 
 const tweetLocationPrefix = 'LOCATION:'
 const tweetDeletePrefix = 'DELETE:'

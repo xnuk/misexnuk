@@ -5,6 +5,7 @@ tsconfig.json:
     rootDirs:
       - src
       - app
+      - modulize
 
     module: commonjs
     target: es6
