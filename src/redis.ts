@@ -1,4 +1,4 @@
-import { createClient } from 'redis'
+import { RedisClient, createClient } from 'redis'
 
 export type RedisEnv = {
 	host: string,
@@ -6,13 +6,36 @@ export type RedisEnv = {
 	prefix: string
 }
 
-const callback = <T>(
-	resolve: (reply: T) => void,
-	reject: (err: Error) => void,
-) => (
-	err: Error | null,
-	reply: T,
-): void => err ? reject(err) : resolve(reply)
+type Callback<T, E extends Error = Error> = (err: E | null, res: T) => void
+
+const hole = <T>(func: (cb: Callback<T>) => void): Promise<T> =>
+	new Promise<T>((res, rej) =>
+		func((err, reply) => err ? rej(err) : res(reply))
+	)
+
+function get(this: RedisClient, key: string): Promise<string> {
+	return hole($ => this.get(key, $))
+}
+
+function set(
+	this: RedisClient,
+	key: string, value: string, expireSeconds?: number,
+): Promise<'OK' | void> {
+	return expireSeconds == null
+		? hole($ => this.set(key, value, $))
+		: hole($ => this.set(key, value, 'ex', expireSeconds, $))
+}
+
+function hset(
+	this: RedisClient,
+	key: string, field: string, value: string,
+): Promise<number> {
+	return hole($ => this.hset(key, field, value, $))
+}
+
+function quit(this: RedisClient): Promise<'OK'> {
+	return hole($ => this.quit($))
+}
 
 export const Redis = ({host, port, prefix}: RedisEnv) => {
 	const client = createClient({
@@ -22,37 +45,9 @@ export const Redis = ({host, port, prefix}: RedisEnv) => {
 	})
 
 	return {
-		get: (key: string): Promise<string> => new Promise((res, rej) =>
-			client.get(key, callback(res, rej))
-		),
-
-		set: (
-			key: string,
-			value: string,
-			expireSeconds?: number,
-		): Promise<'OK' | undefined> => new Promise((res, rej) =>
-			expireSeconds == null
-				? client.set(
-					key, value,
-					callback(res, rej),
-				)
-				: client.set(
-					key, value, 'ex', expireSeconds,
-					callback(res, rej),
-				)
-		),
-
-		hset: (
-			key: string,
-			field: string,
-			value: string,
-		): Promise<number> => new Promise((res, rej) =>
-			client.hset(
-				key, field, value,
-				callback(res, rej),
-			)
-		),
-
-		quit: (cb: () => void) => client.quit(cb)
+		get: get.bind(client),
+		set: set.bind(client),
+		hset: hset.bind(client),
+		quit: quit.bind(client),
 	}
 }
