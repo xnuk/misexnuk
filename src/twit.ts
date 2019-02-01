@@ -3,9 +3,17 @@ import { misexnukPretty } from './misexnuk'
 import { Redis, RedisEnv } from './redis'
 import { LatLng } from './common'
 
+type KeyValue = ReturnType<typeof Redis>
+
 const tweetLocationPrefix = 'LOCATION:'
-const tweetDeletePrefix = 'DELETE:'
+const tweetDeleteKey = 'DELETE'
 const tweetSinceTweetIdKey = 'SINCE_TWEET_ID'
+
+const getSinceTweetId = (keyValue: KeyValue) =>
+	keyValue.get(tweetSinceTweetIdKey).catch(() => null)
+
+const setSinceTweetId = (keyValue: KeyValue, value: string) =>
+	keyValue.set(tweetSinceTweetIdKey, value)
 
 const replyTweet = (T: Twit) => (id_str: string, status: string) =>
 	new Promise<{id_str: string}>((res, rej) =>
@@ -16,6 +24,9 @@ const replyTweet = (T: Twit) => (id_str: string, status: string) =>
 			in_reply_to_status_id: id_str as string
 		} as object, (e, d) => e ? rej(e) : res(d as {id_str: string}))
 	)
+
+const deleteTweet = (T: Twit) => (id_str: string) =>
+	T.post('statuses/destroy/:id', {id: id_str, trim_user: true}, () => {})
 
 const encodeLocation = ({lat, lng}: LatLng) => lat + ',' + lng
 const decodeLocation = (hash: string): LatLng | null => {
@@ -93,8 +104,9 @@ const tweetChaser = (
 		{tweet: tweetId, user: userId},
 		query,
 	).then(({id_str}) =>
-		keyValue.set(
-			tweetDeletePrefix + tweet.id_str,
+		keyValue.hset(
+			tweetDeleteKey,
+			tweet.id_str,
 			id_str,
 		)
 	)
@@ -115,6 +127,7 @@ const withBound = (n: number) => async <T>(
 const getList = (
 	T: Twit,
 	list_id: string,
+) => (
 	since_id?: string
 ): Promise<any[]> => new Promise(res =>
 	T.get('lists/statuses',
@@ -129,27 +142,26 @@ const getList = (
 )
 
 const listStream = (
-	T: Twit,
 	keyValue: ReturnType<typeof Redis>,
-	list_id: string
+	listBind: (since_id?: string) => Promise<any[]>
 ) => async (cb: (tweet: any) => void) => {
-	let since_id: string | null =
-		await keyValue.get(tweetSinceTweetIdKey).catch(() => null)
+	let since_id: string | null = await getSinceTweetId(keyValue)
 
-	const listBind = getList.bind(null, T, list_id)
 	const list = () => since_id == null ? listBind() : listBind(since_id)
 	const bound = withBound(3000)
 
-	console.log('a')
 	while(true) {
 		await bound(async () => {
 			const tweets = await list()
-			console.log('c')
+			let promise: Promise<any> = Promise.resolve()
 
 			if (tweets[0]) {
-				since_id = tweets[0].id_str
+				since_id = tweets[0].id_str as string
+				promise = setSinceTweetId(keyValue, since_id)
 				tweets.forEach(cb)
 			}
+
+			await promise
 		})
 	}
 }
@@ -164,7 +176,7 @@ export const run = (
 	const keyValue = Redis(redisEnv)
 	const handler = twitHandler(T, kakaoToken)
 	const listener = tweetChaser(keyValue, handler)
-	const stream = listStream(T, keyValue, list_id)
+	const stream = listStream(keyValue, getList(T, list_id))
 
 	return stream(listener)
 	// return T.stream('statuses/filter', {
