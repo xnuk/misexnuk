@@ -22,11 +22,14 @@ const REDIS_ENV = {
 	prefix: env('REDIS_PREFIX')
 }
 
+const TWITTER_LIST_ID = env('TWITTER_LIST_ID')
+
 export const getEnv = () => {
 	if (requiredEnvs.length === 0) return {
 		KAKAO_TOKEN,
 		TWITTER_CREDENTIAL,
 		REDIS_ENV,
+		TWITTER_LIST_ID,
 	}
 
 	throw `
