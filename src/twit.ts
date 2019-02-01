@@ -102,9 +102,8 @@ export const run = (
 			{tweet: tweetId, user: userId},
 			query,
 		).then(({id_str}) =>
-			keyValue.hset(
-				tweetDeletePrefix + tweet.user.id_str,
-				tweet.id_str,
+			keyValue.set(
+				tweetDeletePrefix + tweet.id_str,
 				id_str,
 			)
 		)
