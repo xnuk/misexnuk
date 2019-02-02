@@ -25,8 +25,30 @@ const replyTweet = (T: Twit) => (id_str: string, status: string) =>
 		} as object, (e, d) => e ? rej(e) : res(d as {id_str: string}))
 	)
 
-const deleteTweet = (T: Twit) => (id_str: string) =>
-	T.post('statuses/destroy/:id', {id: id_str, trim_user: true}, () => {})
+const deleteTweet = (T: Twit) => (id_str: string): Promise<void> =>
+	new Promise(res =>
+		T.post('statuses/destroy/:id', {
+			id: id_str,
+			trim_user: true,
+		}, () => res())
+	)
+
+const lookupTweets = (
+	T: Twit
+) => (ids: string[]): Promise<{[id: string]: object | null}> =>
+	new Promise((res, rej) =>
+		T.get('statuses/lookup', {
+			id: ids.join(','),
+			include_entities: false,
+			trim_user: true,
+			map: true,
+			include_ext_alt_text: false,
+			include_card_uri: false
+		} as any, (e, d) => e
+			? rej(e)
+			: res((d as any).id)
+		)
+	)
 
 const encodeLocation = ({lat, lng}: LatLng) => lat + ',' + lng
 const decodeLocation = (hash: string): LatLng | null => {
@@ -124,6 +146,15 @@ const withBound = (n: number) => async <T>(
 	return p
 }
 
+const forever = (ms: number) => {
+	const bound = withBound(ms)
+	return async (promise: () => Promise<any>) => {
+		while (true) {
+			await bound(promise)
+		}
+	}
+}
+
 const getList = (
 	T: Twit,
 	list_id: string,
@@ -148,23 +179,58 @@ const listStream = (
 	let since_id: string | null = await getSinceTweetId(keyValue)
 
 	const list = () => since_id == null ? listBind() : listBind(since_id)
-	const bound = withBound(3000)
 
-	while(true) {
-		await bound(async () => {
-			const tweets = await list()
-			let promise: Promise<any> = Promise.resolve()
+	forever(3000)(async () => {
+		const tweets = await list()
+		let promise: Promise<any> = Promise.resolve()
 
-			if (tweets[0]) {
-				since_id = tweets[0].id_str as string
-				promise = setSinceTweetId(keyValue, since_id)
-				tweets.forEach(cb)
-			}
+		if (tweets[0]) {
+			since_id = tweets[0].id_str as string
+			promise = setSinceTweetId(keyValue, since_id)
+			tweets.forEach(cb)
+		}
 
-			await promise
-		})
-	}
+		await promise
+	})
 }
+
+const compare = <T>(a: T, b: T): -1 | 0 | 1 => a<b ? -1 : a>b ? 1 : 0
+const bigIntCompare = (a: string, b: string) =>
+	(a.length - b.length) || compare(a, b)
+
+const tweetDeleter = (
+	keyValue: ReturnType<typeof Redis>,
+	remove: (id: string) => Promise<void>,
+	lookup: (ids: string[]) => Promise<{[id: string]: null | object}>,
+) => async () => {
+	const tweetMap = await keyValue
+		.hgetall(tweetDeleteKey)
+		.then(o => o || {}, () => ({}))
+
+	const ids = Object.keys(tweetMap).sort(bigIntCompare)
+	if (ids.length < 1) Promise.resolve()
+
+	const recentTweets = await lookup(ids.splice(-100))
+	const goneIds =
+		Object.keys(recentTweets).filter(key => recentTweets[key] == null)
+
+	const deleteIds = ids.concat(goneIds)
+
+	const promises = deleteIds.map(id => {
+		const tweetId = tweetMap[id]
+		Promise.all([
+			keyValue.hdel(tweetDeleteKey, tweetId),
+			remove(tweetId),
+		])
+	})
+
+	await Promise.all(promises)
+}
+const tweetDeleteJob = (
+	keyValue: ReturnType<typeof Redis>,
+	remove: (id: string) => Promise<void>,
+	lookup: (ids: string[]) => Promise<{[id: string]: null | object}>,
+) => () => forever(3000)(tweetDeleter(keyValue, remove, lookup))
 
 export const run = (
 	twitter: TwitterCredential,
@@ -176,13 +242,10 @@ export const run = (
 	const keyValue = Redis(redisEnv)
 	const handler = twitHandler(T, kakaoToken)
 	const listener = tweetChaser(keyValue, handler)
+	const remove = deleteTweet(T)
+	const lookup = lookupTweets(T)
+	const deleter = tweetDeleteJob(keyValue, remove, lookup)
 	const stream = listStream(keyValue, getList(T, list_id))
 
-	return stream(listener)
-	// return T.stream('statuses/filter', {
-	// 	track: '미세즈눅',
-	// 	follow: '1247422820'
-	// })
-
-	// .on('tweet', listener)
+	return {stream: () => stream(listener), deleter}
 }
