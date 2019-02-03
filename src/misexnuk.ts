@@ -65,7 +65,7 @@ export const misexnukPretty = (kakaoToken: string) => {
 			({airkorea: {address, time, pm10, pm25}, location}) => {
 				const timeAt = `${time}시 기준, `
 
-				const pm10Arrow =
+				const pm10Arrow = pm10 &&
 					`PM10: ${
 						pm10Level(pm10[pm10.length - 1])
 					} ${
@@ -73,9 +73,9 @@ export const misexnukPretty = (kakaoToken: string) => {
 							.slice(pm10.length - 8)
 							.map(v => v === null ? '' : v)
 							.join('→')
-					}`
+					}` || null
 
-				const pm25Arrow =
+				const pm25Arrow = pm25 &&
 					`PM2.5: ${
 						pm25Level(pm25[pm25.length - 1])
 					} ${
@@ -83,7 +83,7 @@ export const misexnukPretty = (kakaoToken: string) => {
 							.slice(pm25.length - 8)
 							.map(v => v === null ? '' : v)
 							.join('→')
-					}`
+					}` || null
 
 				const footer = '(㎍/㎥, 시간 단위)'
 
@@ -93,10 +93,8 @@ export const misexnukPretty = (kakaoToken: string) => {
 						pm10Arrow,
 						pm25Arrow,
 						footer,
-					].join('\n'))
+					].filter(v => v != null).join('\n'))
 				) / 2 | 0
-
-				console.log(addressLength)
 
 				return {
 					location,
@@ -105,7 +103,7 @@ export const misexnukPretty = (kakaoToken: string) => {
 						pm10Arrow,
 						pm25Arrow,
 						footer
-					].join('\n')
+					].filter(v => v != null).join('\n')
 				}
 			}
 		).catch(err =>
