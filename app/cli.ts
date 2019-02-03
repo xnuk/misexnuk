@@ -1,5 +1,5 @@
 import 'dotenv/config'
-import { misexnukPretty } from '../src/misexnuk';
+import { misexnukPretty } from '../src/misexnuk'
 import { getEnv } from './env'
 
 const { KAKAO_TOKEN } = getEnv()
