@@ -81,7 +81,7 @@ const twitHandler = (T: Twit, kakaoToken: string) => async (
 	}
 
 	if (location === '') {
-		return reply('네?')
+		return reply('미세즈눅 황간역')
 	} else {
 		const result = await misexnuk(location)
 		if (typeof result === 'string') return reply(result)
