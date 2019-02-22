@@ -150,7 +150,7 @@ const forever = (ms: number) => {
 	const bound = withBound(ms)
 	return async (promise: () => Promise<any>) => {
 		while (true) {
-			await bound(promise)
+			await bound(promise).catch(() => {})
 		}
 	}
 }
@@ -219,7 +219,7 @@ const tweetDeleter = (
 	const promises = deleteIds.map(id => {
 		const tweetId = tweetMap[id]
 		Promise.all([
-			keyValue.hdel(tweetDeleteKey, tweetId),
+			keyValue.hdel(tweetDeleteKey, id),
 			remove(tweetId),
 		])
 	})
