@@ -10,16 +10,16 @@
     "run": "NODE_ENV=production node dist/app/run.js"
   },
   "dependencies": {
-    "axios": "^0.19.0",
-    "dotenv": "^8.0.0",
-    "twit": "^2.2.11",
-    "redis": "^2.8.0"
+    "axios": "^0.19.2",
+    "dotenv": "^8.2.0",
+    "redis": "^3.0.2",
+    "twit": "^2.2.11"
   },
   "devDependencies": {
-    "@types/node": "^12.0.4",
-    "@types/twit": "^2.2.22",
-    "@types/redis": "^2.8.13",
-    "ts-node": "^8.2.0",
-    "typescript": "^3.5.1"
+    "@types/node": "^13.13.4",
+    "@types/redis": "^2.8.18",
+    "@types/twit": "^2.2.24",
+    "ts-node": "^8.9.1",
+    "typescript": "^3.8.3"
   }
 }
