@@ -5,7 +5,7 @@
   "license": "BSD-3-Clause",
   "scripts": {
     "dev-run": "ts-node app/run.ts",
-    "setup": "./gen.rb && npm install --save-dev",
+    "setup": "npm install --save-dev",
     "build": "npm run setup && NODE_ENV=production tsc",
     "run": "NODE_ENV=production node dist/app/run.js"
   },
