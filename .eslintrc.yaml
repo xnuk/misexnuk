@@ -1,0 +1,79 @@
+env:
+  node: true
+  es2021: true
+extends:
+  - 'eslint:recommended'
+  - 'plugin:@typescript-eslint/recommended'
+
+
+parser: '@typescript-eslint/parser'
+parserOptions:
+  sourceType: module
+plugins:
+  - '@typescript-eslint'
+
+rules:
+  indent:
+  - error
+  - tab
+  - SwitchCase: 0
+    outerIIFEBody: 0
+    ArrayExpression: 0
+    ObjectExpression: 0
+
+  max-len:
+  - error
+  - code: 80
+    tabWidth: 4
+    ignoreUrls: true
+    ignoreRegExpLiterals: true
+
+  max-params: [ error, 5 ]
+  max-depth: [ error, 4 ]
+
+  linebreak-style: [ error, unix ]
+  quotes: [ error, double ]
+  semi: [ error, never ]
+  comma-style: [ error, first ]
+  comma-dangle: [ error, never ]
+  operator-linebreak: [ error, before ]
+  object-curly-spacing: [ error, always ]
+  array-bracket-spacing: [ error, always ]
+  block-spacing: [ error, always ]
+  wrap-iife: [ error, outside ]
+  no-promise-executor-return: [ error ]
+  no-template-curly-in-string: [ error ]
+  no-useless-backreference: [ error ]
+  require-atomic-updates: [ error ]
+  init-declarations: [ error, always ]
+  unicode-bom: [ error, never ]
+  template-tag-spacing: [ error, never ]
+  switch-colon-spacing: [ error ]
+
+  prefer-arrow-callback: [ error ]
+  prefer-const: [ error ]
+  arrow-spacing: [ error ]
+  arrow-parens: [ error, as-needed ]
+  arrow-body-style: [ error, as-needed ]
+
+  yoda:
+  - error
+  - never
+  - exceptRange: true
+
+  eqeqeq:
+  - error
+  - always
+  - null: never
+
+  key-spacing:
+  - error
+  - beforeColon: false
+    afterColon: true
+    mode: minimum
+
+  comma-spacing:
+  - error
+  - after: true
+    before: false
+
