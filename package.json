@@ -1,25 +1,27 @@
-{
-  "name": "misexnuk",
-  "version": "1.0.0",
-  "author": "Xnuk Shuman",
-  "license": "BSD-3-Clause",
-  "scripts": {
-    "dev-run": "ts-node app/run.ts",
-    "setup": "npm install --save-dev",
-    "build": "npm run setup && NODE_ENV=production tsc",
-    "run": "NODE_ENV=production node dist/app/run.js"
-  },
-  "dependencies": {
-    "axios": "^0.21.0",
-    "dotenv": "^8.2.0",
-    "redis": "^3.0.2",
-    "twit": "^2.2.11"
-  },
-  "devDependencies": {
-    "@types/node": "^14.14.8",
-    "@types/redis": "^2.8.28",
-    "@types/twit": "^2.2.28",
-    "ts-node": "^9.0.0",
-    "typescript": "^4.0.5"
-  }
+{ "name": "misexnuk"
+, "version": "1.0.0"
+, "author": "Xnuk Shuman"
+, "license": "BSD-3-Clause"
+, "scripts":
+	{ "dev-run": "ts-node app/run.ts"
+	, "setup": "npm install --save-dev"
+	, "build": "npm run setup && NODE_ENV=production tsc"
+	, "run": "NODE_ENV=production node dist/app/run.js"
+	}
+, "dependencies":
+	{ "axios": "^0.21.0"
+	, "dotenv": "^8.2.0"
+	, "redis": "^3.0.2"
+	, "twit": "^2.2.11"
+	}
+, "devDependencies":
+	{ "@types/node": "^14.14.8"
+	, "@types/redis": "^2.8.28"
+	, "@types/twit": "^2.2.28"
+	, "@typescript-eslint/eslint-plugin": "^4.8.1"
+	, "@typescript-eslint/parser": "^4.8.1"
+	, "eslint": "^7.13.0"
+	, "ts-node": "^9.0.0"
+	, "typescript": "^4.0.5"
+	}
 }
