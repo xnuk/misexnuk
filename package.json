@@ -9,7 +9,7 @@
 	, "run": "NODE_ENV=production node dist/app/run.js"
 	}
 , "dependencies":
-	{ "axios": "^0.21.0"
+	{ "axios": "^0.21.1"
 	, "dotenv": "^8.2.0"
 	, "redis": "^3.0.2"
 	, "twit": "^2.2.11"
